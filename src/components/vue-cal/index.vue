@@ -51,9 +51,9 @@
                   :splits="['week', 'day'].indexOf(view.id) > -1 && splitDays || []"
                   @click.native="selectCell(cell)"
                   @dblclick.native="dblClickToNavigate && switchToNarrowerView()")
-                  div(slot="events-count-month-view" slot-scope="{ events }" :events="events")
+                  .vuecal__cell-events-count(slot="events-count-month-view" slot-scope="{ events }" :events="events")
                     slot(name="events-count-month-view" :events="events")
-                      span.vuecal__cell-events-count(v-if="events.length") {{ events.length }}
+                      span(v-if="events.length") {{ events.length }}
                   div(slot="event-renderer" slot-scope="{ event, view }" :view="view" :event="event")
                     slot(name="event-renderer" :view="view" :event="event")
                       .vuecal__event-title.vuecal__event-title--edit(contenteditable v-if="editableEvents && event.title" @blur="onEventTitleBlur($event, event)" v-html="event.title")
@@ -67,7 +67,7 @@
 </template>
 
 <script>
-import { now, isDateToday, getPreviousMonday, getDaysInMonth, formatDate, formatTime } from './date-utils'
+import { now, isDateToday, getPreviousFirstDayOfWeek, getDaysInMonth, formatDate, formatTime } from './date-utils'
 import Cell from './cell'
 
 export default {
@@ -105,6 +105,10 @@ export default {
     selectedDate: {
       type: [String, Date],
       default: ''
+    },
+    startWeekOnSunday: {
+      type: Boolean,
+      default: false
     },
     small: {
       type: Boolean,
@@ -244,7 +248,7 @@ export default {
           this.switchView(this.view.id, firstDayOfMonth)
           break
         case 'week':
-          const firstDayOfPrevWeek = getPreviousMonday(this.view.startDate).subtractDays(7)
+          const firstDayOfPrevWeek = getPreviousFirstDayOfWeek(this.view.startDate, this.startWeekOnSunday).subtractDays(7)
           this.switchView(this.view.id, firstDayOfPrevWeek)
           break
         case 'day':
@@ -270,7 +274,7 @@ export default {
           this.switchView(this.view.id, firstDayOfMonth)
           break
         case 'week':
-          const firstDayOfNextWeek = getPreviousMonday(this.view.startDate).addDays(7)
+          const firstDayOfNextWeek = getPreviousFirstDayOfWeek(this.view.startDate, this.startWeekOnSunday).addDays(7)
           this.switchView(this.view.id, firstDayOfNextWeek)
           break
         case 'day':
@@ -308,7 +312,7 @@ export default {
 
       if (!date) {
         date = this.view.selectedDate || this.view.startDate
-        if (view === 'week') date = getPreviousMonday(date)
+        if (view === 'week') date = getPreviousFirstDayOfWeek(date, this.startWeekOnSunday)
       }
 
       switch (view) {
@@ -334,7 +338,7 @@ export default {
           }
           break
         case 'week':
-          this.view.startDate = date
+          this.view.startDate = this.hideWeekends && this.startWeekOnSunday ? date.addDays(1) : date
           this.view.endDate = date.addDays(7)
           dateTmp = new Date(date)
           for (let i = 0; i < 7; i++) {
@@ -715,7 +719,17 @@ export default {
       return !!this.splitDays.length && ['week', 'day'].indexOf(this.view.id) > -1
     },
     weekDays () {
-      return this.texts.weekDays.map(day => ({ label: day }))
+      let { weekDays } = this.texts
+      // Do not modify original for next instances.
+      weekDays = weekDays.slice(0)
+
+      if (this.startWeekOnSunday) weekDays.unshift(weekDays.pop())
+
+      if (this.hideWeekends) {
+        weekDays = this.startWeekOnSunday ? weekDays.slice(1, 6): weekDays.slice(0, 5)
+      }
+
+      return weekDays.map(day => ({ label: day }))
     },
     months () {
       return this.texts.months.map(month => ({ label: month }))
@@ -762,7 +776,7 @@ export default {
         case 'month':
         case 'week':
           let todayFound = false
-          headings = this.weekDays.slice(0, this.hideWeekends ? 5 : 7).map((cell, i) => {
+          headings = this.weekDays.map((cell, i) => {
             let date = this.view.startDate.addDays(i)
             // Only for week view.
             let isToday = this.view.id === 'week' && !todayFound && isDateToday(date) && !todayFound++
@@ -825,9 +839,9 @@ export default {
           todayFound = false
           let nextMonthDays = 0
 
-          // If the first day of the month is not a Monday, prepend missing days to the days array.
+          // If the first day of the month is not a FirstDayOfWeek (Monday or Sunday), prepend missing days to the days array.
           if (days[0].getDay() !== 1) {
-            let d = getPreviousMonday(days[0])
+            let d = getPreviousFirstDayOfWeek(days[0], this.startWeekOnSunday)
             let prevWeek = []
             for (let i = 0; i < 7; i++) {
               prevWeek.push(new Date(d))
@@ -870,7 +884,7 @@ export default {
           todayFound = false
           let firstDayOfWeek = this.view.startDate
 
-          cells = this.weekDays.slice(0, this.hideWeekends ? 5 : 7).map((cell, i) => {
+          cells = this.weekDays.map((cell, i) => {
             const date = firstDayOfWeek.addDays(i)
             const formattedDate = formatDate(date, 'yyyy-mm-dd', this.texts)
             let isToday = !todayFound && isDateToday(date) && !todayFound++
@@ -1193,14 +1207,12 @@ $weekdays-headings-height: 2.8em;
   .vuecal__cell, &:not(.vuecal--day-view) .vuecal__cell:before {background: none;border: none;}
   .vuecal__cell.out-of-scope {opacity: 0.4;}
   .vuecal__cell-content {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
+    flex-grow: 0;
     border: 1px solid transparent;
+    border-radius: 30px;
     color: #333;
-    border-radius: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
   &.vuecal--day-view .vuecal__cell-content {width: auto;background: none;}
   &.vuecal--year-view .vuecal__cell {width: 33.33%;}
