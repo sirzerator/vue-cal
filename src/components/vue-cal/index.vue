@@ -401,7 +401,7 @@ export default {
     selectCell (cell) {
       this.$emit('day-click', cell.date)
 
-      if (this.view.selectedDate.toString() !== cell.date.toString()) {
+      if (this.view.selectedDate && this.view.selectedDate.toString() !== cell.date.toString()) {
         this.view.selectedDate = cell.date
         this.$emit('day-focus', cell.date)
       }
@@ -847,7 +847,7 @@ export default {
           const year = this.view.startDate.getFullYear()
           let days = getDaysInMonth(month, year)
           const firstOfMonthDayOfWeek = days[0].getDay()
-          let selectedDateAtMidnight = new Date(this.view.selectedDate.getTime())
+          let selectedDateAtMidnight = this.view.selectedDate ? new Date(this.view.selectedDate.getTime()) : this.view.startDate.getTime();
           selectedDateAtMidnight.setHours(0, 0, 0, 0)
           todayFound = false
           let nextMonthDays = 0
