@@ -647,6 +647,9 @@ export default {
         this.view.selectedDate = date
         this.switchView(this.view.id)
       }
+      if (!date) {
+        this.view.selectedDate = null;
+      }
     }
   },
 
