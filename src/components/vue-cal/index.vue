@@ -847,7 +847,9 @@ export default {
           const year = this.view.startDate.getFullYear()
           let days = getDaysInMonth(month, year)
           const firstOfMonthDayOfWeek = days[0].getDay()
-          let selectedDateAtMidnight = this.view.selectedDate ? new Date(this.view.selectedDate.getTime()) : this.view.startDate.getTime();
+          let selectedDateAtMidnight = this.view.selectedDate
+            ? new Date(this.view.selectedDate.getTime())
+            : new Date(this.view.startDate.getTime());
           selectedDateAtMidnight.setHours(0, 0, 0, 0)
           todayFound = false
           let nextMonthDays = 0
