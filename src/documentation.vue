@@ -1253,6 +1253,7 @@
     li #[span.code ready]
     li #[span.code view-change]
     li #[span.code day-focus] - is a JS native #[span.code Date] object
+    li #[span.code day-click] - is a JS native #[span.code Date] object
   highlight-message(no-icon)
     | The emitted events #[span.code ready] &amp; #[span.code view-change] return an object:#[br]
     sshpre.mt-2.mb-0(language="js").

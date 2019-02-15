@@ -399,6 +399,8 @@ export default {
     },
 
     selectCell (cell) {
+      this.$emit('day-click', cell.date)
+
       if (this.view.selectedDate.toString() !== cell.date.toString()) {
         this.view.selectedDate = cell.date
         this.$emit('day-focus', cell.date)
