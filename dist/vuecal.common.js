@@ -5136,7 +5136,6 @@ component.options.__file = "cell.vue"
       this.view.id = view;
       var dateTmp, endTime, formattedDate, dayEvents;
 
-		console.log(this.view);
       if (!date) {
         date = this.view.selectedDate || this.view.startDate;
         if (view === 'week') date = getPreviousFirstDayOfWeek(date, this.startWeekOnSunday);
@@ -5813,7 +5812,6 @@ component.options.__file = "cell.vue"
 
             var isToday = !todayFound && cellDate && cellDate.getDate() === _this8.now.getDate() && cellDate.getMonth() === _this8.now.getMonth() && cellDate.getFullYear() === _this8.now.getFullYear() && !todayFound++;
             var formattedDate = formatDate(cellDate, 'yyyy-mm-dd', _this8.texts);
-			  console.log(_this8.view.selectedDate);
             return {
               content: cellDate.getDate(),
               date: cellDate,
