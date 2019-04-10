@@ -660,8 +660,7 @@ export default {
     this.view.id = this.defaultView
     if (this.selectedDate) this.updateSelectedDate(this.selectedDate)
     else {
-      this.view.selectedDate = this.now
-      this.switchView(this.defaultView)
+      this.switchView(this.defaultView, new Date())
     }
   },
 
